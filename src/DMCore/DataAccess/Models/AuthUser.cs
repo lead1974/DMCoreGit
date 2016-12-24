@@ -4,10 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
-namespace DMCore.Models
+namespace DMCore.DataAccess.Models
 {
-    // Add profile data for application users by adding properties to the ApplicationUser class
-    public class ApplicationUser : IdentityUser
+    // Add profile data for application users by adding properties to the AuthUser class
+    public class AuthUser : IdentityUser
     {
+
     }
 }

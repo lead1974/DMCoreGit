@@ -4,9 +4,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DMCore.Models.AccountViewModels
+namespace DMCore.ViewModels.AccountViewModels
 {
-    public class ExternalLoginConfirmationViewModel
+    public class ForgotPasswordViewModel
     {
         [Required]
         [EmailAddress]

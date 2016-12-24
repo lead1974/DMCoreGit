@@ -17,10 +17,10 @@ namespace DMCore.Services
         {
             var emailMessage = new MimeMessage();
 
-            emailMessage.From.Add(new MailboxAddress("Auth App", "admin@auth.com"));
+            emailMessage.From.Add(new MailboxAddress("DealsMo.com", "admin@dealsmo.com"));
             emailMessage.To.Add(new MailboxAddress("", email));
             emailMessage.Subject = subject;
-            emailMessage.Body = new TextPart("plain") { Text = message };
+            emailMessage.Body = new TextPart("html") { Text = message };
 
             using (var client = new SmtpClient())
             {

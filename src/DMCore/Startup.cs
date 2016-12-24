@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using DMCore.Data;
-using DMCore.Models;
+using DMCore.DataAccess;
 using DMCore.Services;
-using Microsoft.AspNetCore.Mvc;
+using DMCore.DataAccess.Models;
 
 namespace DMCore
 {
@@ -46,40 +41,57 @@ namespace DMCore
             // Add framework services.
             services.AddApplicationInsightsTelemetry(Configuration);
 
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContext<AuthenticationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
+            services.AddIdentity<AuthUser, IdentityRole>()
+                .AddEntityFrameworkStores<AuthenticationDbContext>()
                 .AddDefaultTokenProviders();
 
-            services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+            services.AddIdentity<AuthUser, IdentityRole>(options =>
             {
+                options.User.RequireUniqueEmail = true;
                 options.Password.RequireDigit = false;
                 options.Password.RequiredLength = 6;
                 options.Password.RequireLowercase = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
 
+                options.Cookies.ApplicationCookie.LoginPath = "/Account/Login";
+
                 options.SignIn.RequireConfirmedEmail = true;
             })
-              .AddEntityFrameworkStores<ApplicationDbContext>()
+              .AddEntityFrameworkStores<AuthenticationDbContext>()
               .AddDefaultTokenProviders();
+
+            services.AddLogging();
+
+            services.AddDbContext<DMCoreDbContext>();
 
             services.AddMvc();
 
             // Add application services.
             services.AddTransient<IEmailSender, AuthMessageSender>();
             services.AddTransient<ISmsSender, AuthMessageSender>();
-
-                //services.Configure<MvcOptions>(options =>
-                //{
-                //    options.Filters.Add(new RequireHttpsAttribute());
-                //});
+            services.AddTransient<DMCoreDbContextSeedData>();
+            services.AddScoped<IGlobalService, GlobalService>();
+#if DEBUG
+            services.AddScoped<IMailService, DebugMailService>();
+#else
+            services.AddScoped<IMailService,MailService>();
+            services.Configure<MvcOptions>(options =>
+            {
+                options.Filters.Add(new RequireHttpsAttribute());
+            });
+#endif
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(
+            IApplicationBuilder app, 
+            IHostingEnvironment env, 
+            ILoggerFactory loggerFactory,
+            DMCoreDbContextSeedData seeder)
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
@@ -113,6 +125,8 @@ namespace DMCore
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+           // await seeder.EnsureSeedDataAsync();
         }
     }
 }
